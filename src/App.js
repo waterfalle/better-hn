@@ -25,18 +25,26 @@ const storyItemGet = async (itemID) => {
   }
 };
 
+const getDate = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString('en-AU');
+}
+
 const List = ({data}) => {
   return (
     <ol>
       {data.map((story) => (
         <li key={story.id}>
-          <a href={story.url} target='_blank' rel="noreferrer">
-            {story.title}
-          </a>
+          <h4>
+            <a href={story.url} target='_blank' rel="noreferrer">
+              {story.title}
+            </a>
+          </h4>
+          <span>{`Date:     ${getDate(story.time)}`}</span>
           <br></br>
-          <span>Score:    {story.score}</span>
+          <span>{`Score:    ${story.score}`}</span>
           <br></br>
-          <span>Author:   {story.by}</span>
+          <span>{`Author:   ${story.by}`}</span>
           <hr></hr>
         </li>
       ))}
