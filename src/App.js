@@ -3,6 +3,9 @@ import * as React from 'react';
 const numStories = 20;
 // cannot be >= 500
 
+const background = document.querySelector('html');
+background.style.cssText = "background-color: CornflowerBlue; color: PaleGoldenRod";
+
 // get the top numStories amount of stories
 const storiesGet = async () => {
   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
@@ -57,11 +60,12 @@ const List = ({data}) => {
               {story.title}
             </a>
           </h4>
-          <span>{`Date:     ${getDate(story.time)}`}</span>
-          <br></br>
-          <span>{`Score:    ${story.score}`}</span>
-          <br></br>
-          <span>{`Author:   ${story.by}`}</span>
+          <h3>
+            <pre>{`Date:     ${getDate(story.time)}`}</pre>
+            <pre>{`Score:    ${story.score}`}</pre>
+            <pre>{`Author:   ${story.by}`}</pre>
+            {/* pre keeps the whitespace intact */}
+          </h3>
           <hr></hr>
         </li>
       ))}
