@@ -3,6 +3,7 @@ import * as React from 'react';
 const numStories = 20;
 // cannot be >= 500
 
+// get the top numStories amount of stories
 const storiesGet = async () => {
   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
   try {
@@ -27,6 +28,7 @@ const storiesGet = async () => {
   }
 };
 
+// returns a Promise; get information for a single story
 const storyItemGet = async (itemID) => {
   const url = `https://hacker-news.firebaseio.com/v0/item/${itemID}.json`
   try {
@@ -38,11 +40,13 @@ const storyItemGet = async (itemID) => {
   }
 };
 
+// function to get date of when the story was written
 const getDate = (timestamp) => {
   const date = new Date(timestamp * 1000);
   return date.toLocaleString('en-AU');
 }
 
+// returns ordered list of the top stories
 const List = ({data}) => {
   return (
     <ol>
@@ -79,8 +83,13 @@ const App = () => {
 
   return (
     <>
-      <h1>Hello World! Top 500 Hacker News Stories</h1>
-      {isLoading ? <p>Loading stories, please wait...</p> : <List data={stories}/>}
+      <h1>{`Hello World! Top ${numStories} Hacker News Stories`}</h1>
+      
+      {isLoading 
+      ? <p>Loading stories, please wait...</p> 
+      : <List data={stories}/>
+      }
+
       {/* the ternary operator will show a loading screen if isLoading is true,
       otherwise it will show the list of stories */}
     </>
