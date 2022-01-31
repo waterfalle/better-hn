@@ -1,13 +1,26 @@
 import * as React from 'react';
 
+const numStories = 20;
+// cannot be >= 500
+
 const storiesGet = async () => {
   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
   try {
     const resp = await fetch(url);
     const data = await resp.json();
-    const storyList = await Promise.all(data.map((itemID) => storyItemGet(itemID).then(res => res)));
+
+    // const storyList = await Promise.all(data.map((itemID) => storyItemGet(itemID).then(res => res)));
     // gets an array of promises.
-    console.log(storyList)
+    // this would get 500 promises, which takes a long time
+
+    let arr = [];
+    for (let i = 0; i < numStories; i++) {
+      arr.push(storyItemGet(data[i]).then(res => res));
+    }
+    const storyList = await Promise.all(arr)
+    // this new code chooses to only get info for the top `numStories`
+    // which makes it faster
+
     return storyList;
   } catch (e) {
     console.error("ERROR", e);
