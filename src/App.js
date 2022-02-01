@@ -4,7 +4,7 @@ const numStories = 20;
 // cannot be >= 500
 
 const background = document.querySelector('html');
-background.style.cssText = "background-color: CornflowerBlue; color: PaleGoldenRod";
+background.style.cssText = "background-color: CornflowerBlue; color: white";
 
 // get the top numStories amount of stories
 const storiesGet = async () => {
@@ -51,15 +51,21 @@ const getDate = (timestamp) => {
 
 // returns ordered list of the top stories
 const List = ({data}) => {
+  data.sort((a, b) => {
+    return b.score - a.score;
+  })
+  // the above will sort the stories based on the story's score 
+  // in descending order
+
   return (
     <ol>
       {data.map((story) => (
-        <li key={story.id}>
-          <h4>
-            <a href={story.url} target='_blank' rel="noreferrer">
+        <li key={story.id} style={{margin: "15px"}}>
+          <h3>
+            <a style={{color: "blue"}} href={story.url} target='_blank' rel="noreferrer">
               {story.title}
             </a>
-          </h4>
+          </h3>
           <h3>
             <pre>{`Date:     ${getDate(story.time)}`}</pre>
             <pre>{`Score:    ${story.score}`}</pre>
@@ -85,12 +91,16 @@ const App = () => {
     });
   }, []);
 
+  console.log(stories);
+
   return (
     <>
-      <h1>{`Hello World! Top ${numStories} Hacker News Stories`}</h1>
+      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px"}}>
+        <code>{`Hello World! Top ${numStories} Hacker News Stories`}</code>
+      </h1>
       
       {isLoading 
-      ? <p>Loading stories, please wait...</p> 
+      ? <h3><p style={{textAlign: "center"}}>Loading stories, please wait...</p></h3> 
       : <List data={stories}/>
       }
 
