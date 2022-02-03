@@ -16,7 +16,6 @@ const storiesGet = async () => {
     // const storyList = await Promise.all(data.map((itemID) => storyItemGet(itemID).then(res => res)));
     // gets an array of promises.
     // this would get 500 promises, which takes a long time
-
     let arr = [];
     for (let i = 0; i < numStories; i++) {
       arr.push(storyItemGet(data[i]).then(res => res));
@@ -51,12 +50,16 @@ const getDate = (timestamp) => {
 
 // returns ordered list of the top stories
 const List = ({data}) => {
+  if (data === undefined) {
+    // empty list
+    return <h2>No Stories</h2>;
+  }
+
   data.sort((a, b) => {
     return b.score - a.score;
   })
   // the above will sort the stories based on the story's score 
   // in descending order
-
   return (
     <ol>
       {data.map((story) => (
@@ -70,6 +73,7 @@ const List = ({data}) => {
             <pre>{`Date:     ${getDate(story.time)}`}</pre>
             <pre>{`Score:    ${story.score}`}</pre>
             <pre>{`Author:   ${story.by}`}</pre>
+            <pre><a href={`https://news.ycombinator.com/item?id=${story.id}`} target='_blank' rel="noreferrer" style={{color: "orange"}}>Click for comments</a></pre>
             {/* pre keeps the whitespace intact */}
           </h3>
           <hr></hr>
@@ -85,18 +89,16 @@ const App = () => {
 
   React.useEffect(() => {
     setIsLoading(true);
-    storiesGet().then(resp => {
-      setStories(resp);
-      setIsLoading(false);
-    });
+    storiesGet()
+    .then(resp => setStories(resp))
+    .finally(() => setIsLoading(false))
+    ;
   }, []);
-
-  console.log(stories);
 
   return (
     <>
-      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px"}}>
-        <code>{`Hello World! Top ${numStories} Hacker News Stories`}</code>
+      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "Poppins, sans-serif"}}>
+        {`Hello World! Top Recent ${numStories} Hacker News Stories`}
       </h1>
       
       {isLoading 
