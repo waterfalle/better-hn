@@ -1,8 +1,5 @@
 import * as React from 'react';
 
-const numStories = 100;
-// cannot be >= 500
-
 const background = document.querySelector('html');
 background.style.cssText = "background-color: CornflowerBlue; color: white";
 
@@ -25,7 +22,7 @@ background.style.cssText = "background-color: CornflowerBlue; color: white";
 //   .then(storyList => storyList);
 // };
 
-const storiesGet = async () => {
+const storiesGet = async (numStories) => {
   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
   try {
     const resp = await fetch(url);
@@ -105,19 +102,43 @@ const List = ({data}) => {
   );
 }
 
+const StoryNumber = ({setNumStories}) => {
+
+  const getNumStories = () => {
+    const value = document.getElementById("numStories").value;
+    const x = Math.floor(value);
+    console.log(typeof value, typeof x, value, x);
+    if (x > 0 && x < 500) {
+      setNumStories(x);
+    }
+  };
+
+  return (
+    <div style={{margin: "20px"}}>
+      <label htmlFor='numStories' style={{color: "orange", fontFamily: "monospace", fontSize: "12pt", fontWeight: "bold"} }>How many stories to display? </label>
+      <input id='numStories' placeholder="1 to 499" type="number" min="1" max="499" style={{borderRadius: "5px"}}></input>
+      <span>  </span>
+      <button onClick={getNumStories} style={{borderRadius: "5px"}}>Enter</button>
+      <br></br>
+      <br></br>
+    </div>
+  );
+}
+
 const App = () => {
   const [stories, setStories] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [numStories, setNumStories] = React.useState(20);
 
   React.useEffect(() => {
     setIsLoading(true);
-    storiesGet()
+    storiesGet(numStories)
     .then(setStories)
     .finally(() => {
       setIsLoading(false);
       console.log("world");
     });
-  }, []);
+  }, [numStories]);
 
     console.log("hello", isLoading);
     // console should show:
@@ -132,10 +153,12 @@ const App = () => {
       <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "Poppins, sans-serif"}}>
         {`Hello World! Top Recent ${numStories} Hacker News Stories`}
       </h1>
+
+      
       
       {isLoading 
       ? <h3><p style={{textAlign: "center"}}>Loading stories, please wait...</p></h3> 
-      : <List data={stories}/>
+      : <><StoryNumber setNumStories={setNumStories}/> <List data={stories}/></>
       }
 
       {/* the ternary operator will show a loading screen if isLoading is true,
