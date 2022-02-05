@@ -150,15 +150,13 @@ const App = () => {
 
   return (
     <>
-      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "Poppins, sans-serif"}}>
+      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "monospace"}}>
         {`Hello World! Top Recent ${numStories} Hacker News Stories`}
       </h1>
 
-      
-      
       {isLoading 
-      ? <h3><p style={{textAlign: "center"}}>Loading stories, please wait...</p></h3> 
-      : <><StoryNumber setNumStories={setNumStories}/> <List data={stories}/></>
+      ? <h3><p style={{textAlign: "center"}}> 🐈 Loading stories, please wait...</p></h3> 
+      : <> <StoryNumber setNumStories={setNumStories}/> <List data={stories}/> </>
       }
 
       {/* the ternary operator will show a loading screen if isLoading is true,
