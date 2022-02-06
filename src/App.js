@@ -22,24 +22,55 @@ background.style.cssText = "background-color: CornflowerBlue; color: white";
 //   .then(storyList => storyList);
 // };
 
-const storiesGet = async (numStories) => {
+// optimise the story retrieval process so that it only requests info 
+// for stories which we don't have the information for.
+// kinda like memoisation?
+// TODO: this info should be stored somewhere
+function optimiseStoriesGet(stories, numStories, data) {
+  let map = new Map();
+  // map is essentially a dictionary, with O(1) lookup time
+  for (let i = 0; i < stories.length; i++) {
+    // console.log("gran", stories[i]);
+    map.set(stories[i].id, stories[i]);
+  }
+  // above is to make a map/dictionary so that we can have O(1) lookup
+  // in the below for loop
+
+  let alreadyHave = [];
+  // story id's for which we already have the story information
+  let arr = [];
+  // array of promises for stories which we don't have info for
+
+  for (let i = 0; i < numStories; i++) {
+    if (map.get(data[i]) === undefined) {
+      // by using a map with O(1) lookup instead of .includes, which is O(n), 
+      // this loop will be O(n) complexity, instead of O(n^2)
+      arr.push(storyItemGet(data[i]).then(res => res));
+    } else {
+      alreadyHave.push(map.get(data[i]));
+    }
+  }
+
+  return {
+    "alreadyHave": alreadyHave,
+    "arr": arr
+  };
+}
+
+const storiesGet = async (numStories, stories) => {
   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
   try {
     const resp = await fetch(url);
     const data = await resp.json();
 
-    // const storyList = await Promise.all(data.map((itemID) => storyItemGet(itemID).then(res => res)));
-    // gets an array of promises.
-    // this would get 500 promises, which takes a long time
-    let arr = [];
-    for (let i = 0; i < numStories; i++) {
-      arr.push(storyItemGet(data[i]).then(res => res));
-    }
+    const {alreadyHave, arr} = optimiseStoriesGet(stories, numStories, data);
     const storyList = await Promise.all(arr)
-    // this new code chooses to only get info for the top `numStories`
-    // which makes it faster
 
-    return storyList;
+    console.log("alreadyHave", alreadyHave);
+    console.log("storyList", storyList);
+
+    return storyList.concat(alreadyHave);
+    // combine both arrays
   } catch (e) {
     console.error("ERROR", e);
   }
@@ -102,23 +133,33 @@ const List = ({data}) => {
   );
 }
 
+// basically will return the correct formatting based on numStories
+const formatLine = (numStories) => {
+  if (numStories === 1) {
+    return `Hello World! Recent Top Hacker News Story 📰`;
+  } else {
+    return `Hello World! Recent Top ${numStories} Hacker News Stories 📰`;
+  }
+};
+
 const StoryNumber = ({setNumStories}) => {
 
   const getNumStories = () => {
     const value = document.getElementById("numStories").value;
     const x = Math.floor(value);
     console.log(typeof value, typeof x, value, x);
-    if (x > 0 && x < 500) {
+    if (x > 0 && x <= 500) {
       setNumStories(x);
+    } else {
+      alert("Enter a valid number between 1 to 500 inclusive!");
     }
   };
 
   return (
     <div style={{margin: "20px"}}>
       <label htmlFor='numStories' style={{color: "orange", fontFamily: "monospace", fontSize: "12pt", fontWeight: "bold"} }>How many stories to display? </label>
-      <input id='numStories' placeholder="1 to 499" type="number" min="1" max="499" style={{borderRadius: "5px"}}></input>
-      <span>  </span>
-      <button onClick={getNumStories} style={{borderRadius: "5px"}}>Enter</button>
+      <input id='numStories' placeholder="1 to 500" type="number" min="1" max="500" style={{borderRadius: "5px"}}></input>
+      <button onClick={getNumStories} style={{borderRadius: "5px", cursor: "pointer", backgroundColor: "transparent", border: "none"}}>🔘</button>
       <br></br>
       <br></br>
     </div>
@@ -132,7 +173,7 @@ const App = () => {
 
   React.useEffect(() => {
     setIsLoading(true);
-    storiesGet(numStories)
+    storiesGet(numStories, stories)
     .then(setStories)
     .finally(() => {
       setIsLoading(false);
@@ -150,8 +191,8 @@ const App = () => {
 
   return (
     <>
-      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "monospace"}}>
-        {`Hello World! Top Recent ${numStories} Hacker News Stories`}
+      <h1 style={{color: "yellow", textAlign: "center", paddingTop: "30px", paddingBottom: "35px", fontFamily: "segoe ui"}}>
+        {formatLine(numStories)}
       </h1>
 
       {isLoading 
