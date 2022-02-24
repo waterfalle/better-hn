@@ -1,4 +1,4 @@
-# Better Hacker News
+# Better Hacker News 🐈
 
 This project was made as alternative of the website at https://news.ycombinator.com/.
 
