@@ -1,90 +1,19 @@
 import * as React from 'react';
 
+// NOTE: this will be refactored
 const background = document.querySelector('html');
 background.style.cssText = "background-color: CornflowerBlue; color: white";
 
-// get the top numStories amount of stories
-
-// NOTE: two methods below; both do the same thing, except that one uses
-// await async and the other uses .then, .catch
-
-// const storiesGet = async () => {
-//   const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
-//   return fetch(url)
-//   .then(resp => resp.json())
-//   .then(data => {
-//     let arr = [];
-//     for (let i = 0; i < numStories; i++) {
-//       arr.push(storyItemGet(data[i]).then(res => res));
-//     }
-//     return Promise.all(arr);
-//   })
-//   .then(storyList => storyList);
-// };
-
-// optimise the story retrieval process so that it only requests info 
-// for stories which we don't have the information for.
-// kinda like memoisation?
-// TODO: this info should be stored somewhere
-function optimiseStoriesGet(stories, numStories, data) {
-  let map = new Map();
-  // map is essentially a dictionary, with O(1) lookup time
-  for (let i = 0; i < stories.length; i++) {
-    // console.log("gran", stories[i]);
-    map.set(stories[i].id, stories[i]);
-  }
-  // above is to make a map/dictionary so that we can have O(1) lookup
-  // in the below for loop
-
-  let alreadyHave = [];
-  // story id's for which we already have the story information
-  let arr = [];
-  // array of promises for stories which we don't have info for
-
-  for (let i = 0; i < numStories; i++) {
-    if (map.get(data[i]) === undefined) {
-      // by using a map with O(1) lookup instead of .includes, which is O(n), 
-      // this loop will be O(n) complexity, instead of O(n^2)
-      arr.push(storyItemGet(data[i]).then(res => res));
-    } else {
-      alreadyHave.push(map.get(data[i]));
-    }
-  }
-
-  return {
-    "alreadyHave": alreadyHave,
-    "arr": arr
-  };
-}
-
-const storiesGet = async (numStories, stories) => {
-  const url = "https://hacker-news.firebaseio.com/v0/topstories.json";
+// gets the top stories from our flask backend
+async function storiesGet(numStories) {
+  const url = `http://127.0.0.1:8080/stories?num_stories=${numStories}`
+  // url to our flask backend to get the top `numStories` stories
   try {
     const resp = await fetch(url);
     const data = await resp.json();
-
-    const {alreadyHave, arr} = optimiseStoriesGet(stories, numStories, data);
-    const storyList = await Promise.all(arr)
-
-    console.log("alreadyHave", alreadyHave);
-    console.log("storyList", storyList);
-
-    return storyList.concat(alreadyHave);
-    // combine both arrays
+    return data["stories"];
   } catch (e) {
     console.error("ERROR", e);
-  }
-};
-
-// returns a Promise; get information for a single story
-const storyItemGet = async (itemID) => {
-  const url = `https://hacker-news.firebaseio.com/v0/item/${itemID}.json`
-  try {
-    const resp = await fetch(url);
-    const storyItem = await resp.json();
-    return storyItem;
-  } catch {
-    console.error("ERROR: Can't get story item");
   }
 };
 
@@ -97,33 +26,28 @@ const getDate = (timestamp) => {
 // returns ordered list of the top stories
 const List = ({data}) => {
   if (data === undefined) {
-    // empty list
+    // empty list (perhaps something wrong with backend)
     return <h2>No Stories</h2>;
   }
 
-  data.sort((a, b) => {
-    return b.score - a.score;
-  })
-  // the above will sort the stories based on the story's score 
-  // in descending order
   return (
     <ol>
       {data.map((story) => {
         const storyUrl = story.url ? story.url : `https://news.ycombinator.com/item?id=${story.id}`
+        // some posts do not have urls; in that case, link back to the original post
         return (
           <li key={story.id} style={{margin: "15px"}}>
             <h3>
-              {}
               <a style={{color: "blue"}} href={storyUrl} target='_blank' rel="noreferrer">
                 {story.title}
               </a>
             </h3>
             <h3>
+              {/* pre keeps the whitespace intact */}
               <pre>{`Date:     ${getDate(story.time)}`}</pre>
               <pre>{`Score:    ${story.score}`}</pre>
               <pre>{`Author:   ${story.by}`}</pre>
               <pre><a href={`https://news.ycombinator.com/item?id=${story.id}`} target='_blank' rel="noreferrer" style={{color: "orange"}}>Click for comments</a></pre>
-              {/* pre keeps the whitespace intact */}
             </h3>
             <hr></hr>
           </li>
@@ -142,6 +66,7 @@ const formatLine = (numStories) => {
   }
 };
 
+// implementation for button to control how many stories to view
 const StoryNumber = ({setNumStories}) => {
 
   const getNumStories = () => {
@@ -173,21 +98,12 @@ const App = () => {
 
   React.useEffect(() => {
     setIsLoading(true);
-    storiesGet(numStories, stories)
+    storiesGet(numStories)
     .then(setStories)
     .finally(() => {
       setIsLoading(false);
-      console.log("world");
     });
   }, [numStories]);
-
-    console.log("hello", isLoading);
-    // console should show:
-    // hello false
-    // hello true
-    // hello true
-    // hello false
-    // world
 
   return (
     <>
@@ -195,9 +111,10 @@ const App = () => {
         {formatLine(numStories)}
       </h1>
 
-      {isLoading 
-      ? <h3><p style={{textAlign: "center"}}> 🐈 Loading stories, please wait...</p></h3> 
-      : <> <StoryNumber setNumStories={setNumStories}/> <List data={stories}/> </>
+      {
+        isLoading 
+        ? <h3><p style={{textAlign: "center"}}> 🐈 Loading stories, please wait...</p></h3> 
+        : <> <StoryNumber setNumStories={setNumStories}/> <List data={stories}/> </>
       }
 
       {/* the ternary operator will show a loading screen if isLoading is true,
