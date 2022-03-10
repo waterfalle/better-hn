@@ -6,7 +6,7 @@ background.style.cssText = "background-color: CornflowerBlue; color: white";
 
 // gets the top stories from our flask backend
 async function storiesGet(numStories) {
-  const url = `http://127.0.0.1:8080/stories?num_stories=${numStories}`
+  const url = `https://better-hn-backend.herokuapp.com/stories?num_stories=${numStories}`
   // url to our flask backend to get the top `numStories` stories
   try {
     const resp = await fetch(url);
